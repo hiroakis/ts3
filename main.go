@@ -12,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-var TestingBucket = aws.String("127.0.0.1")
+// TestingBucket defines the bucket name
+var TestingBucket = "127.0.0.1" // The bucket name must be 127.0.0.1
 
+// TestS3 returns session and cleanup function.
 func TestS3(t *testing.T, dst io.Writer) (*session.Session, func()) {
 	ts3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()

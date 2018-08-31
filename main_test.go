@@ -16,7 +16,7 @@ func TestRunTestingS3(t *testing.T) {
 
 	s := s3.New(sess)
 	_, err := s.PutObject(&s3.PutObjectInput{
-		Bucket:               TestingBucket,
+		Bucket:               aws.String(TestingBucket), // The bucket must be ts3.TestingBucket
 		Key:                  aws.String("key"),
 		Body:                 aws.ReadSeekCloser(strings.NewReader("payload")),
 		ACL:                  aws.String("authenticated-read"),
