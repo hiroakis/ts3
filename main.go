@@ -1,6 +1,7 @@
 package ts3
 
 import (
+	"crypto/tls"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,7 +18,7 @@ var TestingBucket = "127.0.0.1" // The bucket name must be 127.0.0.1
 
 // TestS3 returns session and cleanup function.
 func TestS3(t *testing.T, dst io.Writer) (*session.Session, func()) {
-	ts3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts3 := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		for k, v := range r.Header {
 			t.Logf("%s %s", k, v)
@@ -34,11 +35,20 @@ func TestS3(t *testing.T, dst io.Writer) (*session.Session, func()) {
 			return endpoints.ResolvedEndpoint{}, err
 		}
 		return endpoints.ResolvedEndpoint{
-			URL: "http://:" /* 127.0.0.1 */ + u.Port(),
+			URL: "https://:" /* 127.0.0.1 */ + u.Port(),
 		}, nil
 	}
 
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
 	sess, err := session.NewSession(&aws.Config{
+		HTTPClient:       client,
 		Region:           aws.String(endpoints.ApNortheast1RegionID),
 		EndpointResolver: endpoints.ResolverFunc(s3EndpointFn),
 	})
