@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +16,16 @@ import (
 
 // TestingBucket defines the bucket name
 var TestingBucket = "127.0.0.1" // The bucket name must be 127.0.0.1
+
+func setDummyAwsEnv() func() {
+	os.Setenv("AWS_ACCESS_KEY_ID", "dummy")
+	os.Setenv("AWS_SECRET_ACCESS_KEY", "dummy")
+
+	return func() {
+		os.Unsetenv("AWS_ACCESS_KEY_ID")
+		os.Unsetenv("AWS_SECRET_ACCESS_KEY")
+	}
+}
 
 // TestS3 returns session and cleanup function.
 func TestS3(t *testing.T, dst io.Writer) (*session.Session, func()) {
@@ -46,6 +57,9 @@ func TestS3(t *testing.T, dst io.Writer) (*session.Session, func()) {
 			},
 		},
 	}
+
+	cleanupDummyEnv := setDummyAwsEnv()
+	defer cleanupDummyEnv()
 
 	sess, err := session.NewSession(&aws.Config{
 		HTTPClient:       client,
